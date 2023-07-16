@@ -1,3 +1,1 @@
-## ML and PM 2.5
-- Using machine learning algorithm to predict PM 2.5 from historic data
-- Data from OpenAQ and EPA
+# Using Lorenz 63 then 96 model to generate simulated observations,  and try out ways to combine the pure physics model and pure data-driven model for a hybrid model.
