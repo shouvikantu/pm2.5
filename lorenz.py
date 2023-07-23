@@ -1,29 +1,62 @@
-from scipy.integrate import odeint
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+# Lorenz 96 model parameters
+F = 10
+b = 10 
 
-# Lorenz paramters and initial conditions
-N = 5
-F = 8
+# Number of variables
+J = 40  
 
-def lorenz(x,t):
-    xdot = np.zeros(N)
-    for i in range(N):
-        xdot[i] = (x[(i+1)%N]-x[i-2]) * x[i-1] - x[i] + F
-    return xdot
+# Initialize X array
+X = np.zeros(J)  
 
-x0 = np.ones(N)
-x0[0] += 0.01 # add small perturbation to the first variable
-t = np.arange(0.0, 30.0, 0.01)
+# Timestep  
+dt = 0.01
 
-x=odeint(lorenz, x0, t)
+# Main loop
+timesteps = 10000
+X_data = []
+for t in range(timesteps):
 
-# Plot the Lorenz attractor using a Matplotlib 3D projection
+    # Calculate dX/dt
+    dX_dt = np.zeros(J)
+    dX_dt[:-1] = (X[1:] - X[:-1]) * X[1:] - X[:-1] + F
+    dX_dt[-1] = (X[0] - X[-1]) * X[0] - X[-1] + F
 
-fig = plt.figure()
-ax = fig.add_subplot(projection="3d")
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-ax.plot(x[:,0], x[:,1], x[:,2])
+    # Integrate forward in time
+    X += dt * dX_dt
+
+    # Sample data
+    if t % 10 == 0:
+        X_sample = X.copy()  # Make a copy to avoid overwriting X
+        X_data.append(X_sample)
+
+# Convert to Pandas dataframe  
+X_df = pd.DataFrame(X_data)
+
+# Save to CSV file
+X_df.to_csv("simulated_data.csv", index=False)
+
+#PLotting 
+
+
+X_df = pd.read_csv("simulated_data.csv")
+
+# Get the number of variables (J) and the number of timesteps
+J = X_df.shape[1]
+timesteps = X_df.shape[0]
+
+# Create an array for time steps
+time_steps = np.arange(timesteps) * dt
+
+# Plot the evolution of each variable
+plt.figure(figsize=(12, 6))
+for j in range(J):
+    plt.plot(time_steps, X_df.iloc[:, j], label=f'Variable {j+1}')
+
+plt.xlabel('Time')
+plt.ylabel('Value')
+plt.title('Evolution of Lorenz 96 System Variables')
+plt.legend()
 plt.show()
