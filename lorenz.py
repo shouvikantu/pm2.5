@@ -1,62 +1,33 @@
-import numpy as np
-import pandas as pd
+from scipy.integrate import odeint
 import matplotlib.pyplot as plt
-# Lorenz 96 model parameters
-F = 10
-b = 10 
+import numpy as np
 
-# Number of variables
-J = 40  
-
-# Initialize X array
-X = np.zeros(J)  
-
-# Timestep  
-dt = 0.01
-
-# Main loop
-timesteps = 10000
-X_data = []
-for t in range(timesteps):
-
-    # Calculate dX/dt
-    dX_dt = np.zeros(J)
-    dX_dt[:-1] = (X[1:] - X[:-1]) * X[1:] - X[:-1] + F
-    dX_dt[-1] = (X[0] - X[-1]) * X[0] - X[-1] + F
-
-    # Integrate forward in time
-    X += dt * dX_dt
-
-    # Sample data
-    if t % 10 == 0:
-        X_sample = X.copy()  # Make a copy to avoid overwriting X
-        X_data.append(X_sample)
-
-# Convert to Pandas dataframe  
-X_df = pd.DataFrame(X_data)
-
-# Save to CSV file
-X_df.to_csv("simulated_data.csv", index=False)
-
-#PLotting 
+# These are our constants
+N = 5  # Number of variables
+F = 8  # Forcing
 
 
-X_df = pd.read_csv("simulated_data.csv")
+def L96(x, t):
+    """Lorenz 96 model with constant forcing"""
+    # Setting up vector
+    d = np.zeros(N)
+    # Loops over indices (with operations and Python underflow indexing handling edge cases)
+    for i in range(N):
+        d[i] = (x[(i + 1) % N] - x[i - 2]) * x[i - 1] - x[i] + F
+    return d
 
-# Get the number of variables (J) and the number of timesteps
-J = X_df.shape[1]
-timesteps = X_df.shape[0]
 
-# Create an array for time steps
-time_steps = np.arange(timesteps) * dt
+x0 = F * np.ones(N)  # Initial state (equilibrium)
+x0[0] += 0.01  # Add small perturbation to the first variable
+t = np.arange(0.0, 30.0, 0.01)
 
-# Plot the evolution of each variable
-plt.figure(figsize=(12, 6))
-for j in range(J):
-    plt.plot(time_steps, X_df.iloc[:, j], label=f'Variable {j+1}')
+x = odeint(L96, x0, t)
 
-plt.xlabel('Time')
-plt.ylabel('Value')
-plt.title('Evolution of Lorenz 96 System Variables')
-plt.legend()
+# Plot the first three variables
+fig = plt.figure()
+ax = fig.add_subplot(projection="3d")
+ax.plot(x[:, 0], x[:, 1], x[:, 2])
+ax.set_xlabel("$x_1$")
+ax.set_ylabel("$x_2$")
+ax.set_zlabel("$x_3$")
 plt.show()
